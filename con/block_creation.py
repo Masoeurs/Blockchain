@@ -8,6 +8,13 @@ import MSSF_rs
 from MSSF_rs import G1Element, G2Element, compute_merkle_set_root
 from MSSFbip158 import PyBIP158
 
+
+from MSSF.types.full_block import FullBlock
+from MSSF.types.generator_types import BlockGenerator
+from MSSF.types.unfinished_block import UnfinishedBlock
+from MSSF.util.hash import std_hash
+from MSSF.util.ints import uint8, uint32, uint64, uint128
+from MSSF.util.prev_transaction_block import get_prev_transaction_block
 from MSSF.consensus.block_record import BlockRecord
 from MSSF.consensus.block_rewards import calculate_base_farmer_reward, calculate_pool_reward
 from MSSF.consensus.blockchain_interface import BlockchainInterface
@@ -24,12 +31,6 @@ from MSSF.types.blockchain_format.reward_chain_block import RewardChainBlock, Re
 from MSSF.types.blockchain_format.sized_bytes import bytes32
 from MSSF.types.blockchain_format.vdf import VDFInfo, VDFProof
 from MSSF.types.end_of_slot_bundle import EndOfSubSlotBundle
-from MSSF.types.full_block import FullBlock
-from MSSF.types.generator_types import BlockGenerator
-from MSSF.types.unfinished_block import UnfinishedBlock
-from MSSF.util.hash import std_hash
-from MSSF.util.ints import uint8, uint32, uint64, uint128
-from MSSF.util.prev_transaction_block import get_prev_transaction_block
 
 log = logging.getLogger(__name__)
 
@@ -56,12 +57,12 @@ def create_foliage(
     reward_block_unfinished: RewardChainBlockUnfinished,
     block_generator: Optional[BlockGenerator],
     aggregate_sig: G2Element,
-    additions: List[Coin],
-    removals: List[Coin],
-    prev_block: Optional[BlockRecord],
     blocks: BlockchainInterface,
     total_iters_sp: uint128,
     timestamp: uint64,
+    additions: List[Coin],
+    removals: List[Coin],
+    prev_block: Optional[BlockRecord],
     farmer_reward_puzzlehash: bytes32,
     pool_target: PoolTarget,
     get_plot_signature: Callable[[bytes32, G1Element], G2Element],
@@ -70,27 +71,6 @@ def create_foliage(
     compute_cost: Callable[[BlockGenerator, ConsensusConstants, uint32], uint64],
     compute_fees: Callable[[Sequence[Coin], Sequence[Coin]], uint64],
 ) -> Tuple[Foliage, Optional[FoliageTransactionBlock], Optional[TransactionsInfo]]:
-    """
-    Creates a foliage for a given reward chain block. This may or may not be a tx block. In the case of a tx block,
-    the return values are not None. This is called at the signage point, so some of this information may be
-    tweaked at the infusion point.
-
-    Args:
-        constants: consensus constants being used for this chain
-        reward_block_unfinished: the reward block to look at, potentially at the signage point
-        block_generator: transactions to add to the foliage block, if created
-        aggregate_sig: aggregate of all transactions (or infinity element)
-        prev_block: the previous block at the signage point
-        blocks: dict from header hash to blocks, of all ancestor blocks
-        total_iters_sp: total iters at the signage point
-        timestamp: timestamp to put into the foliage block
-        farmer_reward_puzzlehash: where to pay out farming reward
-        pool_target: where to pay out pool reward
-        get_plot_signature: retrieve the signature corresponding to the plot public key
-        get_pool_signature: retrieve the signature corresponding to the pool public key
-        seed: seed to randomize block
-
-    """
 
     if prev_block is not None:
         res = get_prev_transaction_block(prev_block, blocks, total_iters_sp)
@@ -309,37 +289,7 @@ def create_unfinished_block(
     compute_cost: Callable[[BlockGenerator, ConsensusConstants, uint32], uint64] = compute_block_cost,
     compute_fees: Callable[[Sequence[Coin], Sequence[Coin]], uint64] = compute_block_fee,
 ) -> UnfinishedBlock:
-    """
-    Creates a new unfinished block using all the information available at the signage point. This will have to be
-    modified using information from the infusion point.
-
-    Args:
-        constants: consensus constants being used for this chain
-        sub_slot_start_total_iters: the starting sub-slot iters at the signage point sub-slot
-        sub_slot_iters: sub-slot-iters at the infusion point epoch
-        signage_point_index: signage point index of the block to create
-        sp_iters: sp_iters of the block to create
-        ip_iters: ip_iters of the block to create
-        proof_of_space: proof of space of the block to create
-        slot_cc_challenge: challenge hash at the sp sub-slot
-        farmer_reward_puzzle_hash: where to pay out farmer rewards
-        pool_target: where to pay out pool rewards
-        get_plot_signature: function that returns signature corresponding to plot public key
-        get_pool_signature: function that returns signature corresponding to pool public key
-        signage_point: signage point information (VDFs)
-        timestamp: timestamp to add to the foliage block, if created
-        seed: seed to randomize chain
-        block_generator: transactions to add to the foliage block, if created
-        aggregate_sig: aggregate of all transactions (or infinity element)
-        additions: Coins added in spend_bundle
-        removals: Coins removed in spend_bundle
-        prev_block: previous block (already in chain) from the signage point
-        blocks: dictionary from header hash to SBR of all included SBR
-        finished_sub_slots_input: finished_sub_slots at the signage point
-
-    Returns:
-
-    """
+  
     if finished_sub_slots_input is None:
         finished_sub_slots: List[EndOfSubSlotBundle] = []
     else:
@@ -441,25 +391,7 @@ def unfinished_block_to_full_block(
     total_iters_sp: uint128,
     difficulty: uint64,
 ) -> FullBlock:
-    """
-    Converts an unfinished block to a finished block. Includes all the infusion point VDFs as well as tweaking
-    other properties (height, weight, sub-slots, etc)
-
-    Args:
-        unfinished_block: the unfinished block to finish
-        cc_ip_vdf: the challenge chain vdf info at the infusion point
-        cc_ip_proof: the challenge chain proof
-        rc_ip_vdf: the reward chain vdf info at the infusion point
-        rc_ip_proof: the reward chain proof
-        icc_ip_vdf: the infused challenge chain vdf info at the infusion point
-        icc_ip_proof: the infused challenge chain proof
-        finished_sub_slots: finished sub slots from the prev block to the infusion point
-        prev_block: prev block from the infusion point
-        blocks: dictionary from header hash to SBR of all included SBR
-        total_iters_sp: total iters at the signage point
-        difficulty: difficulty at the infusion point
-
-    """
+  
     # Replace things that need to be replaced, since foliage blocks did not necessarily have the latest information
     if prev_block is None:
         is_transaction_block = True
