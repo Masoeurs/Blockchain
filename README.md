@@ -1,7 +1,7 @@
 # Blockchain
-MSSF Blockchain Beta - Under Development
+MSSF Blockchain Testnet - Under Development
 
-MSSF Blockchain - Beta to be released by OCTOBER 2024
+MSSF Blockchain - Testnet to be released by OCTOBER 2024
 
 MSSF Blockchain -  Mainnet to be launched by SEPTEMBER 2025
 
