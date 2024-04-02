@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import os
+import signal
+import ssl
 import asyncio
 import dataclasses
 import json
 import logging
-import os
-import signal
-import ssl
 import subprocess
 import sys
 import time
@@ -38,18 +38,18 @@ from MSSF.util.errors import KeychainCurrentPassphraseIsInvalid
 from MSSF.util.ints import uint32
 from MSSF.util.json_util import dict_to_json_str
 from MSSF.util.keychain import Keychain, KeyData, passphrase_requirements, supports_os_passphrase_storage
-from MSSF.util.lock import Lockfile, LockfileError
-from MSSF.util.log_exceptions import log_exceptions
-from MSSF.util.misc import SignalHandlers
 from MSSF.util.network import WebServer
 from MSSF.util.service_groups import validate_service
 from MSSF.util.setproctitle import setproctitle
+from MSSF.util.lock import Lockfile, LockfileError
+from MSSF.util.log_exceptions import log_exceptions
+from MSSF.util.misc import SignalHandlers
 from MSSF.util.ws_message import WsRpcMessage, create_payload, format_response
 from MSSF.wallet.derive_keys import (
-    master_sk_to_farmer_sk,
-    master_sk_to_pool_sk,
     master_sk_to_wallet_sk,
     master_sk_to_wallet_sk_unhardened,
+    master_sk_to_farmer_sk,
+    master_sk_to_pool_sk,
 )
 
 io_pool_exc = ThreadPoolExecutor()
@@ -253,14 +253,14 @@ class WebSocketServer:
         self.cancel_task_safe(self.state_changed_task)
         service_names = list(self.services.keys())
         stop_service_jobs = [
-            asyncio.create_task(kill_service(self.root_path, self.services, s_n)) for s_n in service_names
+            asyncio.create_task(kill_service(self.root_path,  self.services, s_n)) for s_n in service_names
         ]
         if stop_service_jobs:
             await asyncio.wait(stop_service_jobs)
         self.services.clear()
         self.shutdown_event.set()
         log.info(f"Daemon Server stopping, Services stopped: {service_names}")
-        return {"success": True, "services_stopped": service_names}
+        return {"success": True,  "services_stopped": service_names}
 
     async def incoming_connection(self, request: web.Request) -> web.StreamResponse:
         ws: WebSocketResponse = web.WebSocketResponse(
@@ -313,13 +313,13 @@ class WebSocketServer:
                 elif msg.type == WSMsgType.CLOSING:
                     message = f"Connection closing. {closing_message}"
                 elif msg.type == WSMsgType.CLOSE:
-                    message = f"Connection close requested. {closing_message}"
+                    message = f"Connection close requested.  {closing_message}"
                 elif msg.type == WSMsgType.ERROR:
                     level = logging.ERROR
                     message = f"Websocket exception. {closing_message} {ws.exception()}"
                 else:
                     level = logging.ERROR
-                    message = f"Unexpected message type. {closing_message} {msg.type}"
+                    message = f"Unexpected message type.  {closing_message} {msg.type}"
 
                 self.log.log(level=level, msg=message)
 
@@ -341,7 +341,7 @@ class WebSocketServer:
                     self.log.info(f"Peer disconnected. Closing websocket with {service_names}")
                 else:
                     tb = traceback.format_exc()
-                    self.log.error(f"Unexpected exception trying to send to {service_names} (websocket: {e} {tb})")
+                    self.log.error(f"Unexpected exception  trying to send to {service_names} (websocket: {e} {tb})")
                     self.log.info(f"Closing websocket with {service_names}")
 
                 await connection.close()
@@ -379,7 +379,7 @@ class WebSocketServer:
                             continue
 
                         for connection in connections.copy():
-                            self.log.debug(f"About to ping: {service_name}")
+                            self.log.debug(f"About to ping:  {service_name}")
                             try:
                                 with log_exceptions(
                                     log=self.log,
@@ -396,13 +396,13 @@ class WebSocketServer:
         self, websocket: WebSocketResponse, message: WsRpcMessage
     ) -> Optional[Tuple[str, Set[WebSocketResponse]]]:
         """
-        This function gets called when new message is received via websocket.
+        This function gets called when new message is  received via websocket.
         """
 
         command = message["command"]
         destination = message["destination"]
         if destination != "daemon":
-            if destination in self.connections:
+            if destination in  self.connections:
                 sockets = self.connections[destination]
                 return dict_to_json_str(message), sockets
 
@@ -418,10 +418,10 @@ class WebSocketServer:
             "register_service",
         ]
         if len(data) == 0 and command in commands_with_data:
-            response = {"success": False, "error": f'{command} requires "data"'}
+            response = {"success": False,  "error": f'{command} requires "data"'}
         # Keychain commands should be handled by KeychainServer
         elif command in keychain_commands:
-            response = await self.keychain_server.handle_command(command, data)
+            response =  await self.keychain_server.handle_command(command, data)
         elif command == "ping":
             response = await ping()
         else:
@@ -445,11 +445,11 @@ class WebSocketServer:
             "stop_plotting": self.stop_plotting,
             "stop_service": self.stop_service,
             "is_running": self.is_running_command,
-            "running_services": self.running_services_command,
+            "running_services":  self.running_services_command,
             "is_keyring_locked": self.is_keyring_locked,
             "keyring_status": self.keyring_status_command,
             "unlock_keyring": self.unlock_keyring,
-            "validate_keyring_passphrase": self.validate_keyring_passphrase,
+            "validate_keyring_passphrase":  self.validate_keyring_passphrase,
             "set_keyring_passphrase": self.set_keyring_passphrase,
             "remove_keyring_passphrase": self.remove_keyring_passphrase,
             "exit": self.stop_command,
