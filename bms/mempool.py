@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from subprocess import check_call
 from time import monotonic
 from typing import Collection, Dict, Iterator, List, Optional, Tuple
-
 from MSSF.consensus.coinbase import create_farmer_coin, create_pool_coin
 from MSSF.consensus.default_constants import DEFAULT_CONSTANTS
 from MSSF.full_node.mempool_manager import MempoolManager
