@@ -7,9 +7,7 @@ from enum import Enum
 from statistics import stdev
 from time import process_time as clock
 from typing import Any, Callable, Dict, List, Optional, TextIO, Tuple, Type, Union
-
 import click
-
 from benchmarks.utils import EnumType, get_commit_hash
 from MSSF.types.blockchain_format.sized_bytes import bytes32
 from MSSF.types.full_block import FullBlock
