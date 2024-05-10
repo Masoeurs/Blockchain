@@ -6,7 +6,6 @@ import time
 from contextlib import contextmanager
 from subprocess import check_call
 from typing import Iterator
-
 from MSSF.simulator.block_tools import create_block_tools_async, test_constants
 from MSSF.simulator.keyring import TempKeyring
 from MSSF.util.keyring_wrapper import KeyringWrapper
