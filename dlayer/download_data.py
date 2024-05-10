@@ -1,31 +1,23 @@
 from __future__ import annotations
-
 import logging
 import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
-
 import aiohttp
 from typing_extensions import Literal
-
 from MSSF.data_layer.data_layer_util import NodeType, PluginRemote, Root, SerializedNode, ServerInfo, Status
 from MSSF.data_layer.data_store import DataStore
 from MSSF.types.blockchain_format.sized_bytes import bytes32
-
-
 def get_full_tree_filename(tree_id: bytes32, node_hash: bytes32, generation: int) -> str:
     return f"{tree_id}-{node_hash}-full-{generation}-v1.0.dat"
-
 
 def get_delta_filename(tree_id: bytes32, node_hash: bytes32, generation: int) -> str:
     return f"{tree_id}-{node_hash}-delta-{generation}-v1.0.dat"
 
-
 def is_filename_valid(filename: str) -> bool:
     split = filename.split("-")
-
     try:
         raw_tree_id, raw_node_hash, file_type, raw_generation, raw_version, *rest = split
         tree_id = bytes32(bytes.fromhex(raw_tree_id))
