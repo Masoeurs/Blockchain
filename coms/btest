@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import List, Optional
 
 import click
-
 from MSSF.cmds.beta_funcs import (
     default_beta_root_path,
     prepare_MSSF_blockchain_log,
@@ -19,6 +18,7 @@ from MSSF.cmds.beta_funcs import (
     validate_beta_path,
     validate_metrics_log_interval,
 )
+
 from MSSF.util.beta_metrics import metrics_log_interval_default
 from MSSF.util.config import lock_and_load_config, save_config
 
@@ -30,7 +30,6 @@ def print_restart_warning() -> None:
 @click.group("beta", hidden=True)
 def beta_cmd() -> None:
     pass
-
 
 @beta_cmd.command("configure", help="Configure the beta test mode parameters")
 @click.option("-p", "--path", help="The beta mode root path", type=str, required=False)
